@@ -7,6 +7,7 @@ use std::result::Result;
 
 pub struct Baton {
     socket: UdpSocket,
+    server_url: String,
 }
 
 impl<'a> Baton {
@@ -21,12 +22,12 @@ impl<'a> Baton {
     fn connect(url: &str) -> Result<Baton, String> {
         println!("Connecting to {:}...", url);
 
-        let socket = match UdpSocket::bind("127.0.0.1:12345") {
+        let socket = match UdpSocket::bind("0.0.0.0") {
             Ok(socket) => socket,
             Err(error) => return Err(format!("{:}", error)),
         };
 
-        Ok(Baton { socket: socket })
+        Ok(Baton { socket: socket, server_url: String::from(url) })
     }
 
     fn disconnect(ptr: *mut *mut Baton) {
@@ -36,7 +37,7 @@ impl<'a> Baton {
     }
 
     fn send_ding(&mut self) -> Result<(), String> {
-        match self.socket.send_to(&[0; 10], "127.0.0.1:12346") {
+        match self.socket.send_to(&[0; 10], &self.server_url) {
             Ok(_) => Ok(()),
             Err(error) => Err(format!("{:}", error)),
         }
