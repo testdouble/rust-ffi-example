@@ -1,3 +1,6 @@
+#[macro_use]
+mod debug;
+
 use std::ffi::CStr;
 use std::mem::{drop, transmute};
 use std::net::UdpSocket;
@@ -20,9 +23,9 @@ impl<'a> Baton {
     }
 
     fn connect(url: &str) -> Result<Baton, String> {
-        println!("Connecting to {:}...", url);
+        debug!("Connecting to {:}...", url);
 
-        let socket = match UdpSocket::bind("0.0.0.0") {
+        let socket = match UdpSocket::bind("0.0.0.0:0") {
             Ok(socket) => socket,
             Err(error) => return Err(format!("{:}", error)),
         };
@@ -50,14 +53,14 @@ pub extern "C" fn connect_to_server(ptr: *mut *const Baton, url: *const c_char) 
     let url_str = match url.to_str() {
         Ok(slice) => slice,
         Err(_) => {
-            println!("Invalid UTF8 in URL.");
+            debug!("Invalid UTF8 in URL.");
             return false;
         }
     };
 
     match Baton::connect(url_str) {
         Ok(baton) => {
-            println!("Connected.");
+            debug!("Connected.");
 
             unsafe {
                 *ptr = baton.to_ptr();
@@ -66,7 +69,7 @@ pub extern "C" fn connect_to_server(ptr: *mut *const Baton, url: *const c_char) 
             true
         }
         Err(message) => {
-            println!("Failed to connect: {:}", message);
+            debug!("Failed to connect: {:}", message);
 
             unsafe {
                 *ptr = ptr::null();
@@ -82,7 +85,7 @@ pub extern "C" fn disconnect_from_server(ptr: *mut *mut Baton) {
     if !ptr.is_null() && unsafe { !(*ptr).is_null() } {
         Baton::disconnect(ptr);
 
-        println!("Disconnected.");
+        debug!("Disconnected.");
 
         unsafe {
             *ptr = ptr::null_mut();
@@ -96,7 +99,7 @@ pub extern "C" fn send_ding(ptr: *mut Baton) -> bool {
         match Baton::from_ptr(ptr).send_ding() {
             Ok(_) => true,
             Err(message) => {
-                println!("Error while sending: {:}", message);
+                debug!("Error while sending: {:}", message);
 
                 false
             }
