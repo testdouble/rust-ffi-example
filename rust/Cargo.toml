@@ -1,0 +1,10 @@
+[package]
+name = "ffi_example"
+version = "0.1.0"
+authors = ["Schoonology <michael.r.schoonmaker@gmail.com>"]
+
+[lib]
+name = "ffi_example"
+crate-type = ["dylib"]
+
+[dependencies]
